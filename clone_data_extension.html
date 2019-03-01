@@ -2,42 +2,50 @@
 Platform.Load("Core", "1");    
    try {      
      
-var prox = new Script.Util.WSProxy();
-var guid = Platform.Function.GUID();
-//Set oldname to CustomerKey of data extension you want to clone.
-var oldname = "Sample_Name";
-//Set categoryid to determine the target folder. This can be found by hovering over the folder in the browser window and pulling the number at the end of the status bar.
-var categoryid = 12345;
-      var DEtoCopy = DataExtension.Init(oldname);
-      var jsonArray = DEtoCopy.Fields.Retrieve();
-      for(var i = 0; i < jsonArray.length; i++) {
-          delete jsonArray[i]['ObjectID'];
-          jsonArray[i]['IsRequired'] = false;
-          if(jsonArray[i]['IsPrimaryKey'] == true)
-              jsonArray[i]['IsRequired'] = true;
-          jsonArray[i]['IsNillable'] = true;
-          if(jsonArray[i]['IsRequired'] == true)
-              jsonArray[i]['IsNillable'] = false;
-          if(jsonArray[i]['Name'] == '_ContactKey')
-              jsonArray[i]['Name'] = 'ContactKey';
-         // I had some issues attempting to specify decimal fields so I did a shortcut and converted them to text. This should be addressed in the near future.
-          if(jsonArray[i]['FieldType'] == 'Decimal') {
-             jsonArray[i]['FieldType'] = 'Text';
-             jsonArray[i]['MaxLength'] = 50;
-          };
-      };
-     
-var de = {"Name" : "Clone of: " + oldname,
-          "CustomerKey" : guid,
-          "Description" : "Another DE created via SSJS",
-          "Fields" : jsonArray,
-          "CategoryID": categoryid
-         };
-var res = prox.createItem("DataExtension", de);
-     Write(Stringify(de));
+    var prox = new Script.Util.WSProxy();
+    var guid = Platform.Function.GUID();
+
+    //Set oldname to CustomerKey of data extension you want to clone.
+    var oldname = "Sample_Name";
+
+    //Set categoryid to determine the target folder. This can be found by hovering over the folder in the browser window and pulling the number at the end of the status bar.
+    var newcategoryid = 12345;
+
+    //Get the old DE and translate some field types which don't seem to work otherwise.
+    var DEtoCopy = DataExtension.Init(oldname);
+    var jsonArray = DEtoCopy.Fields.Retrieve();
+    for(var i = 0; i < jsonArray.length; i++) {
+        delete jsonArray[i]['ObjectID'];
+        //Set IsRequired to false by default.
+        jsonArray[i]['IsRequired'] = false;
+        if(jsonArray[i]['IsPrimaryKey'] == true)
+            jsonArray[i]['IsRequired'] = true;
+        //Set IsNillable to false by default.
+        jsonArray[i]['IsNillable'] = true;
+        if(jsonArray[i]['IsRequired'] == true)
+            jsonArray[i]['IsNillable'] = false;
+        //Remove the underscore in ContactKey where present (usually in synchronized DEs)
+        if(jsonArray[i]['Name'] == '_ContactKey')
+            jsonArray[i]['Name'] = 'ContactKey';
+        // I had some issues attempting to specify decimal fields so I did a shortcut and converted them to text. This should be addressed in the near future.
+        if(jsonArray[i]['FieldType'] == 'Decimal') {
+            jsonArray[i]['FieldType'] = 'Text';
+            jsonArray[i]['MaxLength'] = 50;
+        };
+    };
+
+    //Create the new DE. The name can be changed as well as the CustomerKey and Description.
+    var de = {"Name" : "Clone of: " + oldname,
+            "CustomerKey" : guid,
+            "Description" : "Another DE created via SSJS",
+            "Fields" : jsonArray,
+            "CategoryID": newcategoryid
+            };
+    var res = prox.createItem("DataExtension", de);
+        Write(Stringify(de));
   
 } catch (ex) {
-        Write("An error has occurred: " + Stringify(ex));
-        Variable.SetValue("@Result", Stringify(ex));
+    Write("An error has occurred: " + Stringify(ex));
+    Variable.SetValue("@Result", Stringify(ex));
 }
 </script>

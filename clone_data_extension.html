@@ -2,15 +2,15 @@
 Platform.Load("Core", "1");    
    try {      
      
-    //Set oldname to CustomerKey of data extension you want to clone.
-    var oldname = "Sample_Name";
+    //Set oldCustomerKey to CustomerKey of data extension you want to clone.
+    var oldCustomerKey = "Sample_Name";
 
-    //Set categoryid to determine the target folder. This can be found by hovering over the folder in the browser window and pulling the number at the end of the status bar.
+    //Set newcategoryid to determine the target folder. This can be found by hovering over the folder in the browser window and pulling the number at the end of the status bar.
     var newcategoryid = 12345;
 
     //Get the old DE and translate some field types which don't seem to work otherwise.
     var prox = new Script.Util.WSProxy();
-    var DEtoCopy = DataExtension.Init(oldname);
+    var DEtoCopy = DataExtension.Init(oldCustomerKey);
     var jsonArray = DEtoCopy.Fields.Retrieve();
     for(var i = 0; i < jsonArray.length; i++) {
         //I forget why, but this needs to be removed.
@@ -33,9 +33,9 @@ Platform.Load("Core", "1");
         };
     };
 
-    //Create the new DE. The name can be changed as well as the CustomerKey and Description.
+    //Create the new DE. The name can be safely changed as well as the CustomerKey and Description.
     var guid = Platform.Function.GUID();
-    var de = {"Name" : "Clone of: " + oldname,
+    var de = {"Name" : "Clone of: " + oldCustomerKey,
             "CustomerKey" : guid,
             "Description" : "Another DE created via SSJS",
             "Fields" : jsonArray,

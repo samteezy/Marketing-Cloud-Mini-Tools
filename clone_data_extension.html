@@ -13,6 +13,7 @@ Platform.Load("Core", "1");
     var DEtoCopy = DataExtension.Init(oldname);
     var jsonArray = DEtoCopy.Fields.Retrieve();
     for(var i = 0; i < jsonArray.length; i++) {
+        //I forget why, but this needs to be removed.
         delete jsonArray[i]['ObjectID'];
         //Set IsRequired to false by default.
         jsonArray[i]['IsRequired'] = false;
@@ -22,7 +23,7 @@ Platform.Load("Core", "1");
         jsonArray[i]['IsNillable'] = true;
         if(jsonArray[i]['IsRequired'] == true)
             jsonArray[i]['IsNillable'] = false;
-        //Remove the underscore in ContactKey where present (usually in synchronized DEs)
+        //Remove the underscore in ContactKey where present (usually in synchronized DEs).
         if(jsonArray[i]['Name'] == '_ContactKey')
             jsonArray[i]['Name'] = 'ContactKey';
         // I had some issues attempting to specify decimal fields so I did a shortcut and converted them to text. This should be addressed in the near future.

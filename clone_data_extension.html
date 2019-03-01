@@ -1,12 +1,43 @@
+%%[ 
+Var @oldCustomerKey,@newName,@newCategoryId,@runparameter
+
+Set @runparameter = RequestParameter("runparameter")
+
+IF empty (@runparameter) THEN
+
+]%%
+
+<form action="%%=RequestParameter('PAGEURL')=%%" method="POST">
+Source Customer Key: <input type="text" name="oldCustomerKey" value="">
+<br>
+New DE Name: <input type="text" name="newName" value="">
+<br>
+Target Folder (categoryID): <input type="text" name="newCategoryId" value="">
+<br>
+<input type="hidden" name="runparameter" value="true">
+<input type="submit" value="Clone!">
+</form>
+
+%%[
+ELSE
+Set @oldCustomerKey = RequestParameter("oldCustomerKey")
+Set @newName = RequestParameter("newName")
+Set @newCategoryId = RequestParameter("newCategoryId")
+]%%
+
+<b>DE is cloned!</b>
+
 <script runat="server">
-Platform.Load("Core", "1");    
+Platform.Load("Core", "1");
+
    try {      
      
     //Set oldCustomerKey to CustomerKey of data extension you want to clone.
-    var oldCustomerKey = "Sample_Name";
-
+    var oldCustomerKey = Variable.GetValue(@oldCustomerKey);
     //Set newcategoryid to determine the target folder. This can be found by hovering over the folder in the browser window and pulling the number at the end of the status bar.
-    var newcategoryid = 12345;
+    var newcategoryid = Variable.GetValue(@newCategoryId);
+    //Set name of new DE.
+    var newName = Variable.GetValue(@newName);
 
     //Get the old DE and translate some field types which don't seem to work otherwise.
     var prox = new Script.Util.WSProxy();
@@ -26,7 +57,7 @@ Platform.Load("Core", "1");
         //Remove the underscore in ContactKey where present (usually in synchronized DEs).
         if(jsonArray[i]['Name'] == '_ContactKey')
             jsonArray[i]['Name'] = 'ContactKey';
-        // I had some issues attempting to specify decimal fields so I did a shortcut and converted them to text. This should be addressed in the near future.
+        //I had some issues attempting to specify decimal fields so I did a shortcut and converted them to text. This should be addressed in the near future.
         if(jsonArray[i]['FieldType'] == 'Decimal') {
             jsonArray[i]['FieldType'] = 'Text';
             jsonArray[i]['MaxLength'] = 50;
@@ -35,17 +66,21 @@ Platform.Load("Core", "1");
 
     //Create the new DE. The name can be safely changed as well as the CustomerKey and Description.
     var guid = Platform.Function.GUID();
-    var de = {"Name" : "Clone of: " + oldCustomerKey,
+    var de = {"Name" : newName,
             "CustomerKey" : guid,
             "Description" : "Another DE created via SSJS",
             "Fields" : jsonArray,
             "CategoryID": newcategoryid
             };
     var res = prox.createItem("DataExtension", de);
-        Write(Stringify(de));
+        Write(Stringify(res));
   
 } catch (ex) {
     Write("An error has occurred: " + Stringify(ex));
     Variable.SetValue("@Result", Stringify(ex));
 }
 </script>
+
+%%[
+ENDIF
+]%%

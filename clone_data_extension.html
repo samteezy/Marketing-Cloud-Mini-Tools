@@ -8,11 +8,12 @@ IF empty (@runparameter) THEN
 ]%%
 
 <form action="%%=RequestParameter('PAGEURL')=%%" method="POST">
-Source Customer Key: <input type="text" name="oldCustomerKey" value="">
-<br>
-New DE Name: <input type="text" name="newName" value="">
-<br>
-Target Folder (categoryID): <input type="text" name="newCategoryId" value="">
+<p>Source Customer Key: <input type="text" name="oldCustomerKey" value=""></p>
+
+<p>New DE Name: <input type="text" name="newName" value=""></p>
+
+<p>Target Folder (categoryID): <input type="text" name="newCategoryId" value=""><br>
+This can be found by hovering over the folder in the browser window and pulling the number at the end of the status bar.</p>
 <br>
 <input type="hidden" name="runparameter" value="true">
 <input type="submit" value="Clone!">
@@ -44,7 +45,7 @@ Platform.Load("Core", "1");
     var DEtoCopy = DataExtension.Init(oldCustomerKey);
     var jsonArray = DEtoCopy.Fields.Retrieve();
     for(var i = 0; i < jsonArray.length; i++) {
-        //I forget why, but this needs to be removed.
+        //This needs to be removed.
         delete jsonArray[i]['ObjectID'];
         //Set IsRequired to false by default.
         jsonArray[i]['IsRequired'] = false;
@@ -77,7 +78,6 @@ Platform.Load("Core", "1");
   
 } catch (ex) {
     Write("An error has occurred: " + Stringify(ex));
-    Variable.SetValue("@Result", Stringify(ex));
 }
 </script>
 

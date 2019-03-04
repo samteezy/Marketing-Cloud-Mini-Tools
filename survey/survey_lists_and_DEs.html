@@ -1,0 +1,216 @@
+<script runat="server">
+Platform.Load("Core","1");
+try {
+ 	var prox = new Script.Util.WSProxy();
+	  var queryAllAccounts = true;
+	  
+	// Retrieve All List Info
+	var objectType = "List";
+	var cols = ["Client.ID","ListName","Category","CustomerKey","Description","AutomatedEmail.ID","CreatedDate","ModifiedDate","ID","ListClassification","ObjectID","Client.PartnerClientKey","Type"];
+	var filter = {
+			Property: "ListName",
+			SimpleOperator: "notEquals",
+			Value: "All Subscribers"
+		};
+	var listdata = prox.retrieve(objectType, cols, filter, queryAllAccounts);
+	Variable.SetValue("@Lists",Stringify(listdata.Results));
+
+	// Retrieve All DE Info
+	var objectType = "DataExtension";
+	var cols = ["Client.ID","Name","CategoryId","CustomerKey","Description","CreatedDate","ModifiedDate","IsSendable","ObjectID","PartnerKey","Status"];
+	var filter = { /*A filter needs to be included, so we're pulling in all. */
+			Property: "Name",
+			SimpleOperator: "like",
+			Value: "%"
+		};
+	var dedata = prox.retrieve(objectType, cols, filter, queryAllAccounts);
+  Variable.SetValue("@DEs",Stringify(dedata.Results));
+
+
+} catch (ex) {
+ 	Write("An error has occurred: " + Stringify(ex));
+}
+</script>
+
+<!-- JSON5 parser -->
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/json5/0.5.1/json5.min.js"></script>
+
+<!-- jquery, jquery-csv,bootstrap -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.8.12/jquery.csv.min.js"></script>
+<link rel="preload" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"></noscript>
+
+<script src="https://pub.s10.exacttarget.com/gvjpoblp33n"></script>
+
+<!-- site styles and JS -->
+<link href="https://pub.s10.exacttarget.com/ngb51xu1exi" rel="stylesheet">
+
+<script>
+  var excerptRows = 10;
+  var listinput = %%=v(@Lists)=%%;
+  var DEinput = %%=v(@DEs)=%%;
+  var url;
+  function doListJSON() {
+    var json = listinput;
+    // if succeeded, prettify and highlight it
+    // highlight shows when textarea loses focus
+    if (json) {
+      // Reset any error message from previous failed parses.
+      $("div.error").hide();
+      $("div.warning").show();
+      // convert to CSV, make available
+      doCSV(json);
+    } else {
+      // Show error.
+      $("div.warning").hide();
+      $("div.error").show();
+    }
+    return true;
+  }
+  function doDEJSON() {
+    var json = DEinput;
+    // if succeeded, prettify and highlight it
+    // highlight shows when textarea loses focus
+    if (json) {
+      // Reset any error message from previous failed parses.
+      $("div.error").hide();
+      $("div.warning").show();
+      // convert to CSV, make available
+      doCSV(json);
+    } else {
+      // Show error.
+      $("div.warning").hide();
+      $("div.error").show();
+    }
+    return true;
+  }
+  function renderAll(e) {
+    var json = input;
+    var inArray = arrayFrom(json);
+    var outArray = [];
+    for (var row in inArray)
+      outArray[outArray.length] = parse_object(inArray[row]);
+    renderCSV(outArray);
+    $(".show-render-all").hide();
+    return false;
+  }
+  function showCSV(rendered) {
+    if (rendered) {
+      if ($(".csv table").text()) {
+        $(".csv .rendered").show();
+        $(".csv .editing").hide();
+      }
+    } else {
+      $(".csv .rendered").hide();
+      $(".csv .editing").show().focus();
+    }
+  }
+  // takes an array of flat JSON objects, converts them to arrays
+  // renders them into a small table as an example
+  function renderCSV(objects) {
+    var rows = $.csv.fromObjects(objects, {justArrays: true});
+    console.log(rows);
+    if (rows.length < 1) return;
+    // find CSV table
+    var table = $(".csv table")[0];
+    $(table).text("");
+    // render header row
+    var thead = document.createElement("thead");
+    var tr = document.createElement("tr");
+    var header = rows[0];
+    for (field in header) {
+      var th = document.createElement("th");
+      $(th).text(header[field])
+      tr.appendChild(th);
+    }
+    thead.appendChild(tr);
+    // render body of table
+    var tbody = document.createElement("tbody");
+    for (var i=1; i<rows.length; i++) {
+      tr = document.createElement("tr");
+      for (field in rows[i]) {
+        var td = document.createElement("td");
+        $(td)
+          .text(rows[i][field])
+          .attr("title", rows[i][field]);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    table.appendChild(thead);
+    table.appendChild(tbody);
+  }
+  function doCSV(json) {
+    // 1) find the primary array to iterate over
+    // 2) for each item in that array, recursively flatten it into a tabular object
+    // 3) turn that tabular object into a CSV row using jquery-csv
+    var inArray = arrayFrom(json);
+    var outArray = [];
+    for (var row in inArray)
+        outArray[outArray.length] = parse_object(inArray[row]);
+    $("span.rows.count").text("" + outArray.length);
+    var csv = $.csv.fromObjects(outArray);
+    // excerpt and render first few rows
+    renderCSV(outArray.slice(0, excerptRows));
+    showCSV(true);
+    // if there's more we're not showing, add a link to show all
+    if (outArray.length > excerptRows)
+      $(".show-render-all").show();
+    // show raw data if people really want it
+    $(".csv textarea").val(csv);
+    // download link to entire CSV as data
+    // thanks to https://jsfiddle.net/terryyounghk/KPEGU/
+    // and https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side
+    var uri = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+    $(".csv a.download").attr("href", uri);
+  }
+
+  $(function() {
+    $(".csv textarea").click(function() {$(this).focus().select();});
+    $(".csv .raw").click(function() {
+      showCSV(false);
+      $(".csv textarea").focus().select();
+      return false;
+    })
+
+  });
+</script>
+
+</head>
+<body>
+
+  <button onclick="doListJSON()">Run list JSON</button>
+  <br>
+  <button onclick="doDEJSON()">Run DE JSON</button>
+  <br>
+        <section class="csv">
+
+        <p>
+            <span class="rendered">
+            Below are the first few rows (<span class="rows count"></span> total).
+
+            <a download="result.csv" href="#" class="download">
+                Download the entire CSV</a>,
+
+                <span class="show-render-all">
+                <a href="#" class="render-all">show all <span class="rows count"></span> rows</a>,
+                </span>
+
+            or <a href="#" class="raw">show the raw data</a>.
+            </span>
+
+            <span class="editing">
+            Your JSON will appear below as a table.
+            </span>
+        </p>
+
+        <div class="areas">
+            <textarea class="editing" readonly></textarea>
+            <div class="table rendered">
+            <table></table>
+            </div>
+        </div>
+        </section>
+
+        <div style="display:none;">%%=v(@DEs)=%%</div>
+</body>

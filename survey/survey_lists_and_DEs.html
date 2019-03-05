@@ -108,8 +108,14 @@ try {
   // takes an array of flat JSON objects, converts them to arrays
   // renders them into a small table as an example
   function renderCSV(objects) {
-    var rows = $.csv.fromObjects(objects, {justArrays: true});
-    console.log(rows);
+
+    const stageRows = $.csv.fromObjects(objects, {justArrays: true})
+    console.log(stageRows)
+    
+    const rows = stageRows.split(',')
+    console.log(rows)
+
+
     if (rows.length < 1) return;
     // find CSV table
     var table = $(".csv table")[0];
